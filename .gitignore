@@ -26,3 +26,4 @@ build/
 # IDE
 .vscode/
 backend/uploads/
+backend/chroma_db/
