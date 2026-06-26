@@ -52,3 +52,51 @@ Currently in development.
 10. Frontend chat interface
 11. Evaluation dataset
 12. Docker deployment
+
+## Running the Backend Locally
+
+Follow these steps to run the CiteMind backend on your local machine.
+
+### 1. Create a virtual environment
+
+```bash
+python3 -m venv .venv
+```
+
+### 2. Activate the virtual environment
+
+```bash
+source .venv/bin/activate
+```
+
+### 3. Install backend dependencies
+
+```bash
+pip install -r backend/requirements.txt
+```
+
+### 4. Start the FastAPI server
+
+```bash
+uvicorn backend.app.main:app --reload
+```
+
+### 5. Open the backend in your browser
+
+```text
+http://127.0.0.1:8000
+```
+
+### 6. Open the API documentation
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+## Current Backend Endpoints
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/` | GET | Returns a welcome message |
+| `/health` | GET | Checks if the backend is running |
+
