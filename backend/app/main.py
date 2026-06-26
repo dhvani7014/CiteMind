@@ -18,6 +18,7 @@ from backend.app.services.vector_store_service import (
     get_collection_count,
 )
 from backend.app.services.answer_service import generate_grounded_answer
+from backend.app.services.llm_service import generate_llm_answer
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -213,15 +214,34 @@ def ask_question(request: AskRequest):
         top_k=request.top_k,
     )
 
+    llm_result = generate_llm_answer(
+        question=request.question,
+        retrieved_chunks=retrieved_chunks,
+    )
+
     answer_result = generate_grounded_answer(
         question=request.question,
         retrieved_chunks=retrieved_chunks,
     )
 
+    if llm_result:
+        final_answer = llm_result["answer"]
+        answer_mode = "llm"
+        llm_provider = llm_result["llm_provider"]
+        llm_model = llm_result["llm_model"]
+    else:
+        final_answer = answer_result["answer"]
+        answer_mode = "local_fallback"
+        llm_provider = None
+        llm_model = None
+
     return {
         "question": request.question,
         "top_k": request.top_k,
-        "answer": answer_result["answer"],
+        "answer": final_answer,
+        "answer_mode": answer_mode,
+        "llm_provider": llm_provider,
+        "llm_model": llm_model,
         "citations": answer_result["citations"],
         "sources": answer_result["sources"],
         "retrieved_chunks": retrieved_chunks,
