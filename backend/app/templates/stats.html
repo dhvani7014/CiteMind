@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CiteMind | Vector Stats</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+    <div class="background-glow glow-one"></div>
+    <div class="background-glow glow-two"></div>
+
+    <nav class="navbar">
+        <div class="nav-brand">
+            <div class="logo">CM</div>
+            <div>
+                <h1>CiteMind Stats</h1>
+                <p>Vector Store Overview</p>
+            </div>
+        </div>
+
+        <div class="nav-links">
+            <a href="/">Dashboard</a>
+            <a href="/app">Open App</a>
+            <a href="/docs">API Docs</a>
+            <a href="/swagger">Swagger</a>
+        </div>
+
+        <div class="status-pill">
+            <span></span>
+            Online
+        </div>
+    </nav>
+
+    <main class="docs-page">
+        <section class="docs-hero">
+            <div class="tech-pill">
+                ChromaDB • Embeddings • Active Document
+            </div>
+
+            <h2>Vector Store Stats</h2>
+
+            <p>
+                This page shows the current indexing state for CiteMind.
+                It helps you quickly check how many chunks are stored, which vector
+                collection is being used, and which document is currently active.
+            </p>
+
+            <div class="docs-actions">
+                <a href="/app" class="primary-btn">Open CiteMind App</a>
+                <a href="/vector-store/stats" class="secondary-btn">View Raw JSON</a>
+            </div>
+        </section>
+
+        <section class="stats-grid-large">
+            <div class="stat-card-large">
+                <span>Total Chunks</span>
+                <strong>{{ total_chunks }}</strong>
+                <p>
+                    These are the document sections currently indexed in ChromaDB
+                    and available for retrieval.
+                </p>
+            </div>
+
+            <div class="stat-card-large">
+                <span>Collection</span>
+                <strong>{{ collection_name }}</strong>
+                <p>
+                    This is the main vector collection used by the CiteMind RAG pipeline.
+                </p>
+            </div>
+
+            <div class="stat-card-large">
+                <span>Active Document</span>
+                <strong>{{ active_document if active_document else "None" }}</strong>
+                <p>
+                    This is the paper currently used for search, retrieval, and question answering.
+                </p>
+            </div>
+        </section>
+
+        <section class="endpoint-card">
+            <h3>How this fits into the RAG pipeline</h3>
+            <p>
+                When a PDF is uploaded, CiteMind extracts its text, splits it into chunks,
+                converts each chunk into embeddings, stores those vectors in ChromaDB,
+                retrieves relevant chunks for each question, and generates an answer with citations.
+            </p>
+
+            <div class="endpoint-row">
+                <span>1</span>
+                <code>PDF Upload → Text Extraction</code>
+            </div>
+
+            <div class="endpoint-row">
+                <span>2</span>
+                <code>Chunking → Embeddings</code>
+            </div>
+
+            <div class="endpoint-row">
+                <span>3</span>
+                <code>ChromaDB Vector Storage</code>
+            </div>
+
+            <div class="endpoint-row">
+                <span>4</span>
+                <code>Similarity Search → Cited Answer</code>
+            </div>
+        </section>
+
+        <section class="endpoint-card">
+            <h3>Raw API Endpoint</h3>
+            <p>
+                This endpoint returns the same vector store information as JSON for backend testing.
+            </p>
+
+            <div class="endpoint-row">
+                <span>GET</span>
+                <code>/vector-store/stats</code>
+            </div>
+
+            <a href="/vector-store/stats" class="primary-btn">Open JSON Stats</a>
+        </section>
+    </main>
+</body>
+</html>

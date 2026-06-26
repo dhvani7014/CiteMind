@@ -1,151 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CiteMind API Console</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CiteMind | API Docs</title>
+    <link rel="stylesheet" href="/static/style.css" />
 </head>
+
 <body>
     <div class="background-glow glow-one"></div>
     <div class="background-glow glow-two"></div>
-    <div class="background-grid"></div>
 
     <nav class="navbar">
-        <div class="brand">
+        <div class="nav-brand">
             <div class="logo">CM</div>
             <div>
-                <h2>CiteMind API</h2>
+                <h1>CiteMind API</h1>
                 <p>Developer Console</p>
             </div>
         </div>
 
-        <div class="nav-actions">
+        <div class="nav-links">
             <a href="/">Dashboard</a>
+            <a href="/app">Open App</a>
+            <a href="/stats">Vector Stats</a>
             <a href="/swagger">Swagger</a>
             <a href="/redoc">ReDoc</a>
-            <span class="status-pill">
-                <span class="pulse"></span>
-                Online
-            </span>
+        </div>
+
+        <div class="status-pill">
+            <span></span>
+            Online
         </div>
     </nav>
 
-    <main class="container docs-page">
+    <main class="docs-page">
         <section class="docs-hero">
-            <div>
-                <div class="badge">FastAPI Backend • RAG APIs • Citation Grounding</div>
-                <h1>CiteMind API Console</h1>
-                <p>
-                    A clean developer overview of the CiteMind backend endpoints for uploading papers,
-                    indexing document chunks, searching vectors, and generating citation-backed answers.
-                </p>
-
-                <div class="hero-buttons">
-                    <a href="/swagger" class="btn btn-primary">Open Swagger Playground</a>
-                    <a href="/" class="btn btn-secondary">Back to Dashboard</a>
-                </div>
+            <div class="tech-pill">
+                FastAPI Backend • RAG APIs • Citation Grounding
             </div>
 
-            <div class="api-summary-card">
-                <p>Vector Store</p>
-                <h3>{{ total_chunks }}</h3>
-                <span>chunks indexed in ChromaDB</span>
+            <h2>CiteMind API Console</h2>
+
+            <p>
+                A clean developer overview of the CiteMind backend endpoints for uploading papers,
+                indexing document chunks, searching vectors, and generating citation-backed answers.
+            </p>
+
+            <div class="docs-actions">
+                <a href="/swagger" class="primary-btn">Open Swagger Playground</a>
+                <a href="/" class="secondary-btn">Back to Dashboard</a>
             </div>
         </section>
 
-        <section class="section">
-            <div class="section-heading">
-                <p>API Workflow</p>
-                <h2>From PDF upload to cited answer</h2>
+        <section class="stats-grid-large">
+            <div class="stat-card-large">
+                <span>Vector Store</span>
+                <strong>{{ total_chunks }}</strong>
+                <p>Chunks currently indexed in ChromaDB.</p>
             </div>
 
-            <div class="api-flow">
-                <div>POST /upload-pdf</div>
-                <span>→</span>
-                <div>POST /search</div>
-                <span>→</span>
-                <div>POST /ask</div>
-                <span>→</span>
-                <div>Sources + Citations</div>
+            <div class="stat-card-large">
+                <span>Backend</span>
+                <strong>FastAPI</strong>
+                <p>Handles PDF upload, retrieval, and answer generation.</p>
+            </div>
+
+            <div class="stat-card-large">
+                <span>Pipeline</span>
+                <strong>RAG</strong>
+                <p>Retrieval-augmented generation with source-backed answers.</p>
             </div>
         </section>
 
-        <section class="section endpoints-section">
-            <div class="section-heading">
-                <p>Endpoints</p>
-                <h2>Available API routes</h2>
+        <section class="endpoint-card">
+            <h3>API Workflow</h3>
+            <p>The CiteMind backend follows this pipeline from uploaded PDF to final cited answer.</p>
+
+            <div class="endpoint-row">
+                <span>POST</span>
+                <code>/upload-pdf</code>
             </div>
 
-            <div class="endpoint-grid">
-                <div class="endpoint-card">
-                    <div class="endpoint-top">
-                        <span class="method get">GET</span>
-                        <span class="endpoint-path">/health</span>
-                    </div>
-                    <h3>Health Check</h3>
-                    <p>Returns the backend service status.</p>
-                    <pre>{
-  "status": "healthy",
-  "service": "CiteMind API"
-}</pre>
-                </div>
+            <div class="endpoint-row">
+                <span>POST</span>
+                <code>/search</code>
+            </div>
 
-                <div class="endpoint-card featured">
-                    <div class="endpoint-top">
-                        <span class="method post">POST</span>
-                        <span class="endpoint-path">/upload-pdf</span>
-                    </div>
-                    <h3>Upload and Index PDF</h3>
-                    <p>Uploads a PDF, extracts text, chunks content, embeds chunks, and stores them in ChromaDB.</p>
-                    <pre>Form Data:
-file: research_paper.pdf</pre>
-                </div>
+            <div class="endpoint-row">
+                <span>POST</span>
+                <code>/ask</code>
+            </div>
+        </section>
 
-                <div class="endpoint-card">
-                    <div class="endpoint-top">
-                        <span class="method post">POST</span>
-                        <span class="endpoint-path">/search</span>
-                    </div>
-                    <h3>Similarity Search</h3>
-                    <p>Retrieves the most relevant chunks for a user question.</p>
-                    <pre>{
-  "question": "What is the main idea?",
-  "top_k": 3
-}</pre>
+        <section class="endpoint-grid">
+            <div class="endpoint-card">
+                <h3>Health Check</h3>
+                <p>Returns backend status and current active document.</p>
+                <div class="endpoint-row">
+                    <span>GET</span>
+                    <code>/health</code>
                 </div>
+            </div>
 
-                <div class="endpoint-card featured">
-                    <div class="endpoint-top">
-                        <span class="method post">POST</span>
-                        <span class="endpoint-path">/ask</span>
-                    </div>
-                    <h3>Ask with Citations</h3>
-                    <p>Generates a grounded answer and returns clean citation labels.</p>
-                    <pre>{
-  "question": "What problem does this paper solve?",
-  "top_k": 3
-}</pre>
+            <div class="endpoint-card">
+                <h3>Upload and Index PDF</h3>
+                <p>Uploads a PDF, extracts text, chunks it, embeds chunks, and stores them in ChromaDB.</p>
+                <div class="endpoint-row">
+                    <span>POST</span>
+                    <code>/upload-pdf</code>
                 </div>
+            </div>
 
-                <div class="endpoint-card">
-                    <div class="endpoint-top">
-                        <span class="method get">GET</span>
-                        <span class="endpoint-path">/vector-store/stats</span>
-                    </div>
-                    <h3>Vector Store Stats</h3>
-                    <p>Shows the current ChromaDB collection and indexed chunk count.</p>
-                    <pre>{
-  "collection_name": "citemind_papers",
-  "total_chunks": 42
-}</pre>
+            <div class="endpoint-card">
+                <h3>Similarity Search</h3>
+                <p>Retrieves the most relevant paper sections for a user question.</p>
+                <div class="endpoint-row">
+                    <span>POST</span>
+                    <code>/search</code>
+                </div>
+            </div>
+
+            <div class="endpoint-card">
+                <h3>Ask with Citations</h3>
+                <p>Generates a grounded answer using retrieved paper context and returns citations.</p>
+                <div class="endpoint-row">
+                    <span>POST</span>
+                    <code>/ask</code>
+                </div>
+            </div>
+
+            <div class="endpoint-card">
+                <h3>Styled Vector Stats</h3>
+                <p>Shows a polished UI summary of indexed chunks and active document.</p>
+                <div class="endpoint-row">
+                    <span>GET</span>
+                    <code>/stats</code>
+                </div>
+            </div>
+
+            <div class="endpoint-card">
+                <h3>Raw Vector Stats</h3>
+                <p>Returns JSON stats for the vector store. This is meant for API testing.</p>
+                <div class="endpoint-row">
+                    <span>GET</span>
+                    <code>/vector-store/stats</code>
                 </div>
             </div>
         </section>
     </main>
-
-    <footer>
-        <p>CiteMind API Console • Custom docs for a citation-grounded RAG backend</p>
-    </footer>
 </body>
 </html>
