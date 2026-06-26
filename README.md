@@ -152,3 +152,18 @@ Current embedding setup:
 - Embedding dimension: 384
 - Input: chunked PDF text
 - Output: vector representation for each chunk
+
+## Vector Database Storage
+
+CiteMind now stores embedded document chunks in a local ChromaDB vector database.
+
+This allows the app to persist document chunks and their embeddings so they can later be retrieved during question answering.
+
+Current vector database setup:
+
+- Vector DB: ChromaDB
+- Storage mode: Local persistent storage
+- Collection name: `citemind_papers`
+- Stored data: chunk text, embeddings, filename, chunk ID, and character positions
+
+The local database is stored in `backend/chroma_db/`, which is ignored by GitHub.

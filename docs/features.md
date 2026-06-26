@@ -16,14 +16,16 @@
 - Chunk preview response
 - Embedding generation using sentence-transformers
 - Embedding model metadata response
+- ChromaDB vector database integration
+- Persistent vector storage
+- Vector store stats endpoint
 
 ## In Progress
 
-- Vector database storage
+- Similarity search retrieval
 
 ## Planned
 
-- Vector database
 - RAG question answering
 - Source citations
 - Frontend chat UI
