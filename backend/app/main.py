@@ -21,6 +21,7 @@ from backend.app.services.vector_store_service import (
 )
 from backend.app.services.answer_service import generate_grounded_answer
 from backend.app.services.llm_service import generate_llm_answer
+from backend.app.services.hallucination_service import evaluate_grounding
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -454,6 +455,12 @@ def ask_question(request: AskRequest):
         llm_provider = None
         llm_model = None
 
+    grounding_result = evaluate_grounding(
+        answer=final_answer,
+        retrieved_chunks=retrieved_chunks,
+        citations=answer_result["citations"],
+    )
+
     return {
         "question": request.question,
         "top_k": request.top_k,
@@ -465,6 +472,7 @@ def ask_question(request: AskRequest):
         "citations": answer_result["citations"],
         "sources": answer_result["sources"],
         "retrieved_chunks": retrieved_chunks,
+        "grounding": grounding_result,
     }
 
 
