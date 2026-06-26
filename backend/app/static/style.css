@@ -532,3 +532,137 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* Theme toggle */
+
+.theme-toggle {
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    z-index: 9999;
+    padding: 11px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    background: rgba(15, 23, 42, 0.88);
+    color: #e5e7eb;
+    font-weight: 900;
+    font-size: 13px;
+    cursor: pointer;
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(18px);
+    transition: 0.2s ease;
+}
+
+.theme-toggle:hover {
+    transform: translateY(-1px);
+}
+
+/* Flashy black and white mono theme */
+
+body.mono-theme {
+    background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.16), transparent 34%),
+        radial-gradient(circle at top right, rgba(255, 255, 255, 0.10), transparent 32%),
+        linear-gradient(135deg, #030303 0%, #0f0f0f 45%, #181818 100%) !important;
+    color: #f5f5f5 !important;
+}
+
+body.mono-theme .background-grid {
+    display: block !important;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px) !important;
+}
+
+body.mono-theme .background-glow {
+    display: block !important;
+    background: rgba(255, 255, 255, 0.18) !important;
+    opacity: 0.32 !important;
+}
+
+body.mono-theme .navbar,
+body.mono-theme .feature-card,
+body.mono-theme .trust-card,
+body.mono-theme .stat-card-large,
+body.mono-theme .endpoint-card,
+body.mono-theme .code-window {
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.095), rgba(255, 255, 255, 0.035)),
+        rgba(10, 10, 10, 0.78) !important;
+    border-color: rgba(255, 255, 255, 0.18) !important;
+    box-shadow: 0 28px 100px rgba(0, 0, 0, 0.55) !important;
+}
+
+body.mono-theme .logo,
+body.mono-theme .primary-btn {
+    background: linear-gradient(135deg, #ffffff, #bdbdbd, #6f6f6f) !important;
+    color: #050505 !important;
+}
+
+body.mono-theme .secondary-btn,
+body.mono-theme .theme-toggle {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #f5f5f5 !important;
+    border-color: rgba(255, 255, 255, 0.24) !important;
+}
+
+body.mono-theme .secondary-btn:hover,
+body.mono-theme .theme-toggle:hover {
+    background: rgba(255, 255, 255, 0.14) !important;
+}
+
+body.mono-theme .status-pill {
+    background: rgba(255, 255, 255, 0.10) !important;
+    color: #f5f5f5 !important;
+    border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+body.mono-theme .status-pill span {
+    background: #ffffff !important;
+    box-shadow: 0 0 18px rgba(255, 255, 255, 0.95) !important;
+}
+
+body.mono-theme .tech-pill,
+body.mono-theme .feature-icon,
+body.mono-theme .feature-meta,
+body.mono-theme .endpoint-row {
+    background: rgba(255, 255, 255, 0.075) !important;
+    border-color: rgba(255, 255, 255, 0.18) !important;
+    color: #f5f5f5 !important;
+}
+
+body.mono-theme .feature-card {
+    background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.035)),
+        rgba(12, 12, 12, 0.78) !important;
+}
+
+body.mono-theme h1,
+body.mono-theme h2,
+body.mono-theme h3,
+body.mono-theme strong {
+    color: #ffffff !important;
+}
+
+body.mono-theme p,
+body.mono-theme span,
+body.mono-theme .hero-text,
+body.mono-theme .feature-card p,
+body.mono-theme .trust-card p,
+body.mono-theme .docs-hero p,
+body.mono-theme .endpoint-card p {
+    color: #d8d8d8 !important;
+}
+
+body.mono-theme .hero h2 span {
+    background: linear-gradient(135deg, #ffffff, #d4d4d4, #8a8a8a) !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    color: transparent !important;
+}
+
+body.mono-theme .nav-links a,
+body.mono-theme .trust-card span,
+body.mono-theme .endpoint-row code {
+    color: #ffffff !important;
+}

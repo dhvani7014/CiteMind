@@ -555,3 +555,105 @@ textarea:focus {
         width: 100%;
     }
 }
+
+/* Theme toggle */
+
+.theme-toggle {
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    z-index: 9999;
+    padding: 11px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    background: rgba(15, 23, 42, 0.88);
+    color: #e5e7eb;
+    font-weight: 900;
+    font-size: 13px;
+    cursor: pointer;
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(18px);
+}
+
+body.mono-theme {
+    background: #0f0f0f !important;
+    color: #ececec !important;
+}
+
+body.mono-theme .page-bg {
+    display: none !important;
+}
+
+body.mono-theme .left-panel,
+body.mono-theme .chat-panel,
+body.mono-theme .upload-card,
+body.mono-theme .info-card,
+body.mono-theme .sources-compact,
+body.mono-theme .status-box {
+    background: #171717 !important;
+    border-color: #2f2f2f !important;
+    box-shadow: none !important;
+}
+
+body.mono-theme .logo,
+body.mono-theme #uploadButton,
+body.mono-theme #askButton,
+body.mono-theme .flashcard-nav {
+    background: #ececec !important;
+    color: #0f0f0f !important;
+}
+
+body.mono-theme textarea,
+body.mono-theme .question-box {
+    background: #212121 !important;
+    border-color: #3a3a3a !important;
+    color: #ececec !important;
+}
+
+body.mono-theme .message.user {
+    background: #2f2f2f !important;
+    border-color: #3a3a3a !important;
+    color: #ececec !important;
+}
+
+body.mono-theme .message.assistant {
+    background: transparent !important;
+    color: #ececec !important;
+}
+
+body.mono-theme h1,
+body.mono-theme h2,
+body.mono-theme h3,
+body.mono-theme p,
+body.mono-theme li,
+body.mono-theme span {
+    color: #ececec !important;
+}
+
+body.mono-theme .brand p,
+body.mono-theme .chat-header p,
+body.mono-theme .answer-meta,
+body.mono-theme .sources-compact p {
+    color: #cfcfcf !important;
+}
+
+body.mono-theme .pill,
+body.mono-theme .answer-meta,
+body.mono-theme .file-box {
+    background: #212121 !important;
+    border-color: #3a3a3a !important;
+    color: #ececec !important;
+}
+
+body.mono-theme .flashcard-front,
+body.mono-theme .flashcard-back,
+body.mono-theme .flashcard-face {
+    background: #212121 !important;
+    border-color: #3a3a3a !important;
+}
+
+body.mono-theme .theme-toggle {
+    background: #212121 !important;
+    color: #ececec !important;
+    border-color: #3a3a3a !important;
+}
