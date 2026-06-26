@@ -141,12 +141,13 @@ def ask_question(request: AskRequest):
     )
 
     return {
-        "question": request.question,
-        "top_k": request.top_k,
-        "answer": answer_result["answer"],
-        "sources": answer_result["sources"],
-        "retrieved_chunks": retrieved_chunks
-    }
+    "question": request.question,
+    "top_k": request.top_k,
+    "answer": answer_result["answer"],
+    "citations": answer_result["citations"],
+    "sources": answer_result["sources"],
+    "retrieved_chunks": retrieved_chunks
+}
 
 
 @app.get("/vector-store/stats")
