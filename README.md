@@ -167,3 +167,16 @@ Current vector database setup:
 - Stored data: chunk text, embeddings, filename, chunk ID, and character positions
 
 The local database is stored in `backend/chroma_db/`, which is ignored by GitHub.
+
+## Similarity Search Retrieval
+
+CiteMind now supports retrieving relevant document chunks from the vector database.
+
+When a user asks a question, CiteMind:
+
+1. Converts the question into an embedding.
+2. Searches ChromaDB for the most similar document chunks.
+3. Returns the top matching chunks with metadata.
+4. Includes filename, chunk ID, character positions, and similarity distance.
+
+This is the retrieval part of Retrieval-Augmented Generation.

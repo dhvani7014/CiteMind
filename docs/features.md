@@ -19,14 +19,16 @@
 - ChromaDB vector database integration
 - Persistent vector storage
 - Vector store stats endpoint
+- Query embedding generation
+- Similarity search over stored chunks
+- Search endpoint for retrieving relevant chunks
 
 ## In Progress
 
-- Similarity search retrieval
+- RAG answer generation
 
 ## Planned
 
-- RAG question answering
 - Source citations
 - Frontend chat UI
 - Evaluation system
