@@ -57,6 +57,35 @@ def store_chunks_in_vector_db(embedded_chunks: list[dict], filename: str) -> dic
     }
 
 
+def search_similar_chunks(query_embedding: list[float], top_k: int = 3) -> list[dict]:
+    """
+    Search ChromaDB for chunks most similar to the user question.
+    """
+
+    results = collection.query(
+        query_embeddings=[query_embedding],
+        n_results=top_k,
+        include=["documents", "metadatas", "distances"]
+    )
+
+    retrieved_chunks = []
+
+    documents = results.get("documents", [[]])[0]
+    metadatas = results.get("metadatas", [[]])[0]
+    distances = results.get("distances", [[]])[0]
+
+    for document, metadata, distance in zip(documents, metadatas, distances):
+        retrieved_chunks.append(
+            {
+                "text": document,
+                "metadata": metadata,
+                "distance": distance
+            }
+        )
+
+    return retrieved_chunks
+
+
 def get_collection_count() -> int:
     """
     Return the number of chunks currently stored in the vector database.
