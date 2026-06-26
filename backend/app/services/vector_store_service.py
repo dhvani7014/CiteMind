@@ -57,16 +57,28 @@ def store_chunks_in_vector_db(embedded_chunks: list[dict], filename: str) -> dic
     }
 
 
-def search_similar_chunks(query_embedding: list[float], top_k: int = 3) -> list[dict]:
+def search_similar_chunks(
+    query_embedding: list[float],
+    top_k: int = 3,
+    filename: str | None = None
+) -> list[dict]:
     """
     Search ChromaDB for chunks most similar to the user question.
+    Optionally filter results to one uploaded PDF.
     """
 
-    results = collection.query(
-        query_embeddings=[query_embedding],
-        n_results=top_k,
-        include=["documents", "metadatas", "distances"]
-    )
+    query_kwargs = {
+        "query_embeddings": [query_embedding],
+        "n_results": top_k,
+        "include": ["documents", "metadatas", "distances"]
+    }
+
+    if filename:
+        query_kwargs["where"] = {
+            "filename": filename
+        }
+
+    results = collection.query(**query_kwargs)
 
     retrieved_chunks = []
 
@@ -92,3 +104,54 @@ def get_collection_count() -> int:
     """
 
     return collection.count()
+
+
+def clear_vector_store() -> dict:
+    """
+    Clear all stored chunks from the vector database.
+    Useful during testing.
+    """
+
+    all_items = collection.get()
+
+    ids = all_items.get("ids", [])
+
+    if ids:
+        collection.delete(ids=ids)
+
+    return {
+        "status": "cleared",
+        "deleted_chunks": len(ids),
+        "collection_name": COLLECTION_NAME
+    }
+
+def get_document_intro_chunks(filename: str, limit: int = 3) -> list[dict]:
+    """
+    Get the first few chunks of a specific document.
+    These usually contain the title, abstract, and introduction.
+    """
+
+    results = collection.get(
+        where={"filename": filename},
+        include=["documents", "metadatas"]
+    )
+
+    documents = results.get("documents", [])
+    metadatas = results.get("metadatas", [])
+
+    chunks = []
+
+    for document, metadata in zip(documents, metadatas):
+        chunks.append(
+            {
+                "text": document,
+                "metadata": metadata,
+                "distance": 0.0
+            }
+        )
+
+    chunks.sort(
+        key=lambda chunk: chunk["metadata"].get("chunk_id", 0)
+    )
+
+    return chunks[:limit]

@@ -16,6 +16,8 @@ from backend.app.services.vector_store_service import (
     store_chunks_in_vector_db,
     search_similar_chunks,
     get_collection_count,
+    clear_vector_store,
+    get_document_intro_chunks,
 )
 from backend.app.services.answer_service import generate_grounded_answer
 from backend.app.services.llm_service import generate_llm_answer
@@ -46,6 +48,10 @@ app.mount(
 
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
+ACTIVE_DOCUMENT = {
+    "filename": None
+}
+
 
 class SearchRequest(BaseModel):
     question: str
@@ -75,6 +81,30 @@ def api_docs(request: Request):
         name="docs.html",
         context={
             "total_chunks": get_collection_count(),
+        },
+    )
+
+
+@app.get("/app", response_class=HTMLResponse, include_in_schema=False)
+def user_app(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="app.html",
+        context={
+            "total_chunks": get_collection_count(),
+        },
+    )
+
+
+@app.get("/stats", response_class=HTMLResponse, include_in_schema=False)
+def stats_page(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="stats.html",
+        context={
+            "total_chunks": get_collection_count(),
+            "active_document": ACTIVE_DOCUMENT["filename"],
+            "collection_name": "citemind_papers",
         },
     )
 
@@ -128,6 +158,7 @@ def health_check():
     return {
         "status": "healthy",
         "service": "CiteMind API",
+        "active_document": ACTIVE_DOCUMENT["filename"],
     }
 
 
@@ -155,6 +186,8 @@ async def upload_pdf(file: UploadFile = File(...)):
         filename=file.filename,
     )
 
+    ACTIVE_DOCUMENT["filename"] = file.filename
+
     text_preview = extracted_data["full_text"][:1000]
     chunk_preview = chunks[:3]
 
@@ -165,6 +198,7 @@ async def upload_pdf(file: UploadFile = File(...)):
     return {
         "message": "PDF uploaded, text extracted, chunked, embedded, and stored successfully",
         "filename": file.filename,
+        "active_document": ACTIVE_DOCUMENT["filename"],
         "file_path": str(file_path),
         "total_pages": extracted_data["total_pages"],
         "total_chunks": len(chunks),
@@ -185,16 +219,24 @@ def search_documents(request: SearchRequest):
             detail="No document chunks found. Please upload a PDF first.",
         )
 
+    if ACTIVE_DOCUMENT["filename"] is None:
+        raise HTTPException(
+            status_code=400,
+            detail="No active document found. Please upload a PDF first.",
+        )
+
     query_embedding = generate_query_embedding(request.question)
 
     retrieved_chunks = search_similar_chunks(
         query_embedding=query_embedding,
         top_k=request.top_k,
+        filename=ACTIVE_DOCUMENT["filename"],
     )
 
     return {
         "question": request.question,
         "top_k": request.top_k,
+        "active_document": ACTIVE_DOCUMENT["filename"],
         "retrieved_chunks": retrieved_chunks,
     }
 
@@ -207,12 +249,189 @@ def ask_question(request: AskRequest):
             detail="No document chunks found. Please upload a PDF first.",
         )
 
+    if ACTIVE_DOCUMENT["filename"] is None:
+        raise HTTPException(
+            status_code=400,
+            detail="No active document found. Please upload a PDF first.",
+        )
+
     query_embedding = generate_query_embedding(request.question)
 
     retrieved_chunks = search_similar_chunks(
         query_embedding=query_embedding,
         top_k=request.top_k,
+        filename=ACTIVE_DOCUMENT["filename"],
     )
+
+    question_lower = request.question.lower()
+
+    context_boost_keywords = [
+        "main idea",
+        "main point",
+        "summary",
+        "summarize",
+        "summarise",
+        "abstract",
+        "overview",
+        "what is this paper about",
+        "what does this paper discuss",
+        "what is the paper saying",
+        "explain this paper",
+        "paper breakdown",
+        "break down this paper",
+        "high level explanation",
+        "simple explanation",
+        "easy explanation",
+        "author",
+        "authors",
+        "who wrote",
+        "who is the author",
+        "title",
+        "paper title",
+        "publication",
+        "published",
+        "conference",
+        "journal",
+        "year",
+        "date",
+        "affiliation",
+        "university",
+        "institution",
+        "problem",
+        "problem solved",
+        "research problem",
+        "research question",
+        "motivation",
+        "why was this paper written",
+        "why is this important",
+        "gap",
+        "research gap",
+        "objective",
+        "goal",
+        "purpose",
+        "contribution",
+        "contributions",
+        "main contribution",
+        "novelty",
+        "what is new",
+        "innovation",
+        "claim",
+        "claims",
+        "key idea",
+        "key ideas",
+        "method",
+        "methods",
+        "methodology",
+        "approach",
+        "technique",
+        "algorithm",
+        "architecture",
+        "model",
+        "framework",
+        "pipeline",
+        "system design",
+        "how does it work",
+        "dataset",
+        "data",
+        "training data",
+        "test data",
+        "experiment",
+        "experiments",
+        "experimental setup",
+        "evaluation",
+        "metrics",
+        "baseline",
+        "comparison",
+        "benchmark",
+        "performance",
+        "accuracy",
+        "error rate",
+        "results",
+        "findings",
+        "discussion",
+        "conclusion",
+        "limitations",
+        "weakness",
+        "weaknesses",
+        "future work",
+        "next steps",
+        "open problems",
+        "figure",
+        "figures",
+        "table",
+        "tables",
+        "equation",
+        "formula",
+        "diagram",
+        "graph",
+        "chart",
+        "important",
+        "important points",
+        "important concepts",
+        "key points",
+        "key concepts",
+        "main concepts",
+        "study",
+        "study guide",
+        "quiz",
+        "exam",
+        "test",
+        "revision",
+        "review",
+        "notes",
+        "prepare",
+        "prep",
+        "learn",
+        "teach me",
+        "for my quiz",
+        "for my exam",
+        "for my test",
+        "what should i remember",
+        "what should i know",
+        "possible questions",
+        "interview questions",
+        "practice questions",
+        "strengths",
+        "pros",
+        "advantages",
+        "disadvantages",
+        "critique",
+        "critical analysis",
+        "impact",
+        "significance",
+        "real world use",
+        "applications",
+        "use cases",
+        "related work",
+        "references",
+        "citation",
+        "citations",
+        "prior work",
+        "previous work",
+        "compare",
+        "comparison with",
+    ]
+
+    if any(keyword in question_lower for keyword in context_boost_keywords):
+        intro_chunks = get_document_intro_chunks(
+            filename=ACTIVE_DOCUMENT["filename"],
+            limit=3,
+        )
+
+        combined_chunks = intro_chunks + retrieved_chunks
+
+        unique_chunks = []
+        seen_chunk_ids = set()
+
+        for chunk in combined_chunks:
+            metadata = chunk.get("metadata", {})
+            chunk_id = metadata.get("chunk_id")
+
+            if chunk_id not in seen_chunk_ids:
+                unique_chunks.append(chunk)
+                seen_chunk_ids.add(chunk_id)
+
+        retrieved_chunks = unique_chunks[: request.top_k + 3]
 
     llm_result = generate_llm_answer(
         question=request.question,
@@ -238,6 +457,7 @@ def ask_question(request: AskRequest):
     return {
         "question": request.question,
         "top_k": request.top_k,
+        "active_document": ACTIVE_DOCUMENT["filename"],
         "answer": final_answer,
         "answer_mode": answer_mode,
         "llm_provider": llm_provider,
@@ -248,9 +468,16 @@ def ask_question(request: AskRequest):
     }
 
 
+@app.delete("/vector-store/clear")
+def clear_stored_chunks():
+    ACTIVE_DOCUMENT["filename"] = None
+    return clear_vector_store()
+
+
 @app.get("/vector-store/stats")
 def vector_store_stats():
     return {
         "collection_name": "citemind_papers",
         "total_chunks": get_collection_count(),
+        "active_document": ACTIVE_DOCUMENT["filename"],
     }
