@@ -14,6 +14,7 @@ from backend.app.services.vector_store_service import (
     search_similar_chunks,
     get_collection_count,
 )
+from backend.app.services.answer_service import generate_grounded_answer
 
 app = FastAPI(
     title="CiteMind API",
@@ -26,6 +27,11 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class SearchRequest(BaseModel):
+    question: str
+    top_k: int = 3
+
+
+class AskRequest(BaseModel):
     question: str
     top_k: int = 3
 
@@ -110,6 +116,35 @@ def search_documents(request: SearchRequest):
     return {
         "question": request.question,
         "top_k": request.top_k,
+        "retrieved_chunks": retrieved_chunks
+    }
+
+
+@app.post("/ask")
+def ask_question(request: AskRequest):
+    if get_collection_count() == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="No document chunks found. Please upload a PDF first."
+        )
+
+    query_embedding = generate_query_embedding(request.question)
+
+    retrieved_chunks = search_similar_chunks(
+        query_embedding=query_embedding,
+        top_k=request.top_k
+    )
+
+    answer_result = generate_grounded_answer(
+        question=request.question,
+        retrieved_chunks=retrieved_chunks
+    )
+
+    return {
+        "question": request.question,
+        "top_k": request.top_k,
+        "answer": answer_result["answer"],
+        "sources": answer_result["sources"],
         "retrieved_chunks": retrieved_chunks
     }
 
