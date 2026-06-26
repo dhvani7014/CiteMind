@@ -2,6 +2,8 @@ from pathlib import Path
 
 from fastapi import FastAPI, File, UploadFile, HTTPException
 
+from backend.app.services.pdf_service import extract_text_from_pdf
+
 app = FastAPI(
     title="CiteMind API",
     description="AI-powered research paper assistant using RAG",
@@ -30,7 +32,7 @@ def health_check():
 
 @app.post("/upload-pdf")
 async def upload_pdf(file: UploadFile = File(...)):
-    if not file.filename.endswith(".pdf"):
+    if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(
             status_code=400,
             detail="Only PDF files are allowed"
@@ -43,8 +45,14 @@ async def upload_pdf(file: UploadFile = File(...)):
     with open(file_path, "wb") as f:
         f.write(content)
 
+    extracted_data = extract_text_from_pdf(str(file_path))
+
+    text_preview = extracted_data["full_text"][:1000]
+
     return {
-        "message": "PDF uploaded successfully",
+        "message": "PDF uploaded and text extracted successfully",
         "filename": file.filename,
-        "file_path": str(file_path)
+        "file_path": str(file_path),
+        "total_pages": extracted_data["total_pages"],
+        "text_preview": text_preview
     }
