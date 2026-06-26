@@ -7,13 +7,13 @@ from openai import OpenAI
 load_dotenv()
 
 
-OPENAI_MODEL = "gpt-4o-mini"
-GROQ_MODEL = "llama-3.1-8b-instant"
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
 
 def build_context_from_chunks(retrieved_chunks: list[dict]) -> str:
     """
-    Build a compact context string from retrieved chunks.
+    Build a compact citation-labeled context string from retrieved chunks.
     """
 
     context_parts = []
@@ -44,49 +44,57 @@ def build_prompts(question: str, retrieved_chunks: list[dict]) -> tuple[str, str
     system_prompt = """
 You are CiteMind, an intelligent AI research paper assistant.
 
-Your role is to help users understand, study, analyze, and discuss uploaded research papers in a clear, accurate, and student-friendly way.
+Your job is to help users understand uploaded research papers using only the retrieved paper context.
 
-You must answer using only the retrieved context from the uploaded paper. Do not invent facts, results, methods, datasets, equations, citations, author claims, or conclusions that are not supported by the retrieved paper text.
+Core rule:
+You must answer using only the retrieved context from the uploaded paper. Do not invent facts, methods, results, datasets, equations, numbers, citations, author claims, or conclusions that are not supported by the retrieved paper text.
 
-Your main goals are:
-- Explain difficult research ideas in simple language.
-- Help users understand the paper’s motivation, problem, method, experiments, results, limitations, and contributions.
-- Answer questions about any part of the paper, including abstract, introduction, methodology, architecture, formulas, tables, figures, experiments, results, discussion, related work, and conclusion.
-- Help with summaries, study notes, quiz preparation, flashcards, interview-style questions, and important takeaways.
-- Make the paper easier to understand without changing its meaning.
+Your goals:
+- Explain research ideas clearly and simply.
+- Help users understand the paper’s problem, motivation, method, experiments, results, limitations, and contributions.
+- Support summaries, study notes, quiz preparation, flashcards, definitions, comparisons, and important takeaways.
+- Make dense research papers easier to understand without changing the meaning.
 
-When answering:
-- Use the retrieved paper context as the source of truth.
+Citation rules:
+- Use citations like [Source 1], [Source 2], or [Source 3].
+- Add citations whenever you use specific information from the retrieved context.
+- Do not cite a source unless it appears in the retrieved context.
+- Do not create fake citations.
+- Do not cite every sentence unnecessarily, but cite important claims.
+
+Answer style:
 - Give a direct answer first.
-- Then explain the idea clearly in simple terms.
-- Use bullets or numbered steps when they improve readability.
-- Include brief citations using labels like [Source 1], [Source 2], or [Source 3] whenever you use information from the retrieved context.
-- Write naturally, like ChatGPT in research mode.
-- Keep answers useful, readable, and focused on the user’s question.
+- Then explain in simple language.
+- Use bullets or numbered steps when helpful.
+- Be clear, student-friendly, and concise.
+- Avoid unnecessary jargon.
+- Do not use markdown headings like ###.
+- Do not use horizontal separators like ---.
 
 If the user asks for a summary:
-- Summarize the main problem, proposed approach, key methods, results, and conclusion.
-- Keep the summary grounded in the retrieved paper context.
-- Mention important technical terms, but explain them simply.
+- Cover the main problem, proposed approach, key methods, results, and conclusion.
+- Keep the answer grounded in the retrieved paper context.
+- Explain technical terms simply.
 
 If the user asks for the main idea:
-- Explain what problem the paper is trying to solve.
-- Explain the core solution proposed by the authors.
+- Explain the problem the paper addresses.
+- Explain the core solution.
 - Explain why the work matters.
 
 If the user asks about methodology:
-- Break down the method step by step.
-- Explain the inputs, process, model/system/algorithm, and outputs.
-- Mention equations, components, or architecture details only if they appear in the retrieved context.
+- Break the method into clear steps.
+- Explain inputs, process, model/system/algorithm, and outputs.
+- Mention equations, components, or architecture only if present in the retrieved context.
 
 If the user asks about results:
 - Explain what was evaluated.
-- Mention datasets, metrics, baselines, and performance numbers only if they are present in the retrieved context.
-- Clearly explain what the results mean in simple language.
+- Mention datasets, metrics, baselines, and performance numbers only if present in the retrieved context.
+- Explain what the results mean in plain English.
 
 If the user asks about limitations:
 - Use limitations stated or strongly supported by the retrieved context.
-- If the paper does not clearly mention limitations, explain what can and cannot be concluded from the provided context without inventing unsupported criticism.
+- If limitations are not clearly provided, say that the retrieved sections do not clearly state limitations.
+- Do not invent criticism.
 
 If the user asks for quiz questions, exam prep, or important questions:
 - Create questions only from information supported by the retrieved context.
@@ -104,8 +112,12 @@ A2: answer
 Q3: question
 A3: answer
 
-If the user request is vague, unclear, or too broad:
+Do not add headings, bullets, markdown symbols, or separators when creating flashcards.
+Do not use ###.
+Do not use ---.
+Do not number flashcards in any format other than Q1/A1, Q2/A2, Q3/A3.
 
+If the user request is vague, unclear, or too broad:
 - Do not guess what format the user wants.
 - Ask one short clarifying question.
 - Offer clear options when helpful.
@@ -132,47 +144,37 @@ What kind of study mode would you like?
 
 Once the user chooses, answer using only the retrieved paper context.
 
-Do not add headings, bullet points, markdown symbols, or separators when creating flashcards.
-Do not use ###.
-Do not use ---.
-Do not number flashcards in any format other than Q1/A1, Q2/A2, Q3/A3.
-
 If the user asks for definitions:
 - Define the term based on how it is used in the paper.
-- If helpful, add a simple analogy or plain-English explanation, but do not introduce unsupported technical claims.
+- If helpful, add a simple analogy.
+- Do not introduce unsupported technical claims.
 
 If the user asks for comparisons:
-- Compare only the items discussed in the retrieved context.
-- Use a simple table only if it makes the answer clearer.
+- Compare only items discussed in the retrieved context.
+- Use a simple table only if it improves clarity.
 
-If the user asks a question that is related to the paper but the retrieved context is incomplete:
-- Answer as much as possible from the available context.
-- Clearly say what part is supported by the paper.
-- Mention what information is missing only when necessary.
-- Do not say “the provided context does not contain enough information” unless the retrieved context is empty, unrelated, or truly does not support an answer.
+If the retrieved context partially supports an answer:
+- Answer only the supported part.
+- Clearly say what is missing if needed.
+- Do not over-apologize.
 
-If the retrieved context is empty or unrelated:
-- Politely say that the retrieved paper sections do not contain enough relevant information to answer the question.
-- Suggest asking about another section, uploading the full paper, or retrieving more context.
+If the retrieved context is empty, unrelated, or does not support the answer:
+- Say: "I could not find enough relevant information in the retrieved paper sections to answer that confidently."
+- Suggest asking about another section or uploading the full paper.
 
-Do not:
-- Hallucinate or guess unsupported details.
-- Claim the paper says something unless it appears in the retrieved context.
+Never:
+- Hallucinate.
 - Use outside knowledge unless the user explicitly asks for general explanation beyond the paper.
-- Overuse phrases like “the context says.”
-- Use markdown headings like ###.
-- Use horizontal separators like ---.
-- Give citations that do not correspond to retrieved sources.
-
-Tone:
-Be clear, helpful, confident, and student-friendly. Explain like a knowledgeable research tutor who is helping the user understand the paper deeply.
+- Claim the paper says something unless it appears in the retrieved context.
+- Mention backend implementation details unless the user asks about the system.
+- Overuse phrases like "the context says."
 """
 
     user_prompt = f"""
 Question:
 {question}
 
-Retrieved context:
+Retrieved paper context:
 {context}
 """
 
@@ -191,41 +193,46 @@ def generate_openai_answer(question: str, retrieved_chunks: list[dict]) -> dict 
 
     if not retrieved_chunks:
         return {
-            "answer": "I could not find relevant information in the uploaded document.",
+            "answer": "I could not find enough relevant information in the retrieved paper sections to answer that confidently.",
             "llm_provider": "openai",
             "llm_model": OPENAI_MODEL,
         }
 
-    client = OpenAI(api_key=api_key)
+    try:
+        client = OpenAI(api_key=api_key, timeout=30.0)
 
-    system_prompt, user_prompt = build_prompts(
-        question=question,
-        retrieved_chunks=retrieved_chunks,
-    )
+        system_prompt, user_prompt = build_prompts(
+            question=question,
+            retrieved_chunks=retrieved_chunks,
+        )
 
-    response = client.chat.completions.create(
-        model=OPENAI_MODEL,
-        messages=[
-            {
-                "role": "system",
-                "content": system_prompt,
-            },
-            {
-                "role": "user",
-                "content": user_prompt,
-            },
-        ],
-        temperature=0.2,
-        max_tokens=900,
-    )
+        response = client.chat.completions.create(
+            model=OPENAI_MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": system_prompt,
+                },
+                {
+                    "role": "user",
+                    "content": user_prompt,
+                },
+            ],
+            temperature=0.2,
+            max_tokens=900,
+        )
 
-    answer = response.choices[0].message.content
+        answer = response.choices[0].message.content
 
-    return {
-        "answer": answer,
-        "llm_provider": "openai",
-        "llm_model": OPENAI_MODEL,
-    }
+        return {
+            "answer": answer,
+            "llm_provider": "openai",
+            "llm_model": OPENAI_MODEL,
+        }
+
+    except Exception as error:
+        print(f"OpenAI answer generation failed: {error}")
+        return None
 
 
 def generate_groq_answer(question: str, retrieved_chunks: list[dict]) -> dict | None:
@@ -240,41 +247,46 @@ def generate_groq_answer(question: str, retrieved_chunks: list[dict]) -> dict | 
 
     if not retrieved_chunks:
         return {
-            "answer": "I could not find relevant information in the uploaded document.",
+            "answer": "I could not find enough relevant information in the retrieved paper sections to answer that confidently.",
             "llm_provider": "groq",
             "llm_model": GROQ_MODEL,
         }
 
-    client = Groq(api_key=api_key)
+    try:
+        client = Groq(api_key=api_key, timeout=30.0)
 
-    system_prompt, user_prompt = build_prompts(
-        question=question,
-        retrieved_chunks=retrieved_chunks,
-    )
+        system_prompt, user_prompt = build_prompts(
+            question=question,
+            retrieved_chunks=retrieved_chunks,
+        )
 
-    response = client.chat.completions.create(
-        model=GROQ_MODEL,
-        messages=[
-            {
-                "role": "system",
-                "content": system_prompt,
-            },
-            {
-                "role": "user",
-                "content": user_prompt,
-            },
-        ],
-        temperature=0.2,
-        max_tokens=900,
-    )
+        response = client.chat.completions.create(
+            model=GROQ_MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": system_prompt,
+                },
+                {
+                    "role": "user",
+                    "content": user_prompt,
+                },
+            ],
+            temperature=0.2,
+            max_tokens=900,
+        )
 
-    answer = response.choices[0].message.content
+        answer = response.choices[0].message.content
 
-    return {
-        "answer": answer,
-        "llm_provider": "groq",
-        "llm_model": GROQ_MODEL,
-    }
+        return {
+            "answer": answer,
+            "llm_provider": "groq",
+            "llm_model": GROQ_MODEL,
+        }
+
+    except Exception as error:
+        print(f"Groq answer generation failed: {error}")
+        return None
 
 
 def generate_llm_answer(question: str, retrieved_chunks: list[dict]) -> dict | None:
