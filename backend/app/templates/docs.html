@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CiteMind API Console</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="background-glow glow-one"></div>
+    <div class="background-glow glow-two"></div>
+    <div class="background-grid"></div>
+
+    <nav class="navbar">
+        <div class="brand">
+            <div class="logo">CM</div>
+            <div>
+                <h2>CiteMind API</h2>
+                <p>Developer Console</p>
+            </div>
+        </div>
+
+        <div class="nav-actions">
+            <a href="/">Dashboard</a>
+            <a href="/swagger">Swagger</a>
+            <a href="/redoc">ReDoc</a>
+            <span class="status-pill">
+                <span class="pulse"></span>
+                Online
+            </span>
+        </div>
+    </nav>
+
+    <main class="container docs-page">
+        <section class="docs-hero">
+            <div>
+                <div class="badge">FastAPI Backend • RAG APIs • Citation Grounding</div>
+                <h1>CiteMind API Console</h1>
+                <p>
+                    A clean developer overview of the CiteMind backend endpoints for uploading papers,
+                    indexing document chunks, searching vectors, and generating citation-backed answers.
+                </p>
+
+                <div class="hero-buttons">
+                    <a href="/swagger" class="btn btn-primary">Open Swagger Playground</a>
+                    <a href="/" class="btn btn-secondary">Back to Dashboard</a>
+                </div>
+            </div>
+
+            <div class="api-summary-card">
+                <p>Vector Store</p>
+                <h3>{{ total_chunks }}</h3>
+                <span>chunks indexed in ChromaDB</span>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="section-heading">
+                <p>API Workflow</p>
+                <h2>From PDF upload to cited answer</h2>
+            </div>
+
+            <div class="api-flow">
+                <div>POST /upload-pdf</div>
+                <span>→</span>
+                <div>POST /search</div>
+                <span>→</span>
+                <div>POST /ask</div>
+                <span>→</span>
+                <div>Sources + Citations</div>
+            </div>
+        </section>
+
+        <section class="section endpoints-section">
+            <div class="section-heading">
+                <p>Endpoints</p>
+                <h2>Available API routes</h2>
+            </div>
+
+            <div class="endpoint-grid">
+                <div class="endpoint-card">
+                    <div class="endpoint-top">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/health</span>
+                    </div>
+                    <h3>Health Check</h3>
+                    <p>Returns the backend service status.</p>
+                    <pre>{
+  "status": "healthy",
+  "service": "CiteMind API"
+}</pre>
+                </div>
+
+                <div class="endpoint-card featured">
+                    <div class="endpoint-top">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/upload-pdf</span>
+                    </div>
+                    <h3>Upload and Index PDF</h3>
+                    <p>Uploads a PDF, extracts text, chunks content, embeds chunks, and stores them in ChromaDB.</p>
+                    <pre>Form Data:
+file: research_paper.pdf</pre>
+                </div>
+
+                <div class="endpoint-card">
+                    <div class="endpoint-top">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/search</span>
+                    </div>
+                    <h3>Similarity Search</h3>
+                    <p>Retrieves the most relevant chunks for a user question.</p>
+                    <pre>{
+  "question": "What is the main idea?",
+  "top_k": 3
+}</pre>
+                </div>
+
+                <div class="endpoint-card featured">
+                    <div class="endpoint-top">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/ask</span>
+                    </div>
+                    <h3>Ask with Citations</h3>
+                    <p>Generates a grounded answer and returns clean citation labels.</p>
+                    <pre>{
+  "question": "What problem does this paper solve?",
+  "top_k": 3
+}</pre>
+                </div>
+
+                <div class="endpoint-card">
+                    <div class="endpoint-top">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/vector-store/stats</span>
+                    </div>
+                    <h3>Vector Store Stats</h3>
+                    <p>Shows the current ChromaDB collection and indexed chunk count.</p>
+                    <pre>{
+  "collection_name": "citemind_papers",
+  "total_chunks": 42
+}</pre>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>CiteMind API Console • Custom docs for a citation-grounded RAG backend</p>
+    </footer>
+</body>
+</html>

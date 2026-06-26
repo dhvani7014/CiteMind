@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CiteMind | AI Research Assistant</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="background-glow glow-one"></div>
+    <div class="background-glow glow-two"></div>
+    <div class="background-grid"></div>
+
+    <nav class="navbar">
+        <div class="brand">
+            <div class="logo">CM</div>
+            <div>
+                <h2>CiteMind</h2>
+                <p>AI Research Paper Assistant</p>
+            </div>
+        </div>
+
+        <div class="nav-actions">
+            <a href="/docs">API Docs</a>
+            <a href="/vector-store/stats">Vector Stats</a>
+            <span class="status-pill">
+                <span class="pulse"></span>
+                Online
+            </span>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section class="hero">
+            <div class="hero-content">
+                <div class="badge">
+                    Retrieval-Augmented Generation • ChromaDB • FastAPI
+                </div>
+
+                <h1>
+                    Ask research papers.
+                    <span>Get cited answers.</span>
+                </h1>
+
+                <p class="hero-text">
+                    CiteMind is a citation-grounded AI system that uploads research papers,
+                    extracts text, chunks content, generates embeddings, stores vectors,
+                    retrieves relevant context, and returns source-backed answers.
+                </p>
+
+                <div class="hero-buttons">
+                    <a href="/docs" class="btn btn-primary">Explore API</a>
+                    <a href="/vector-store/stats" class="btn btn-secondary">View Vector Store</a>
+                </div>
+
+                <div class="tech-row">
+                    <span>FastAPI</span>
+                    <span>RAG</span>
+                    <span>PyMuPDF</span>
+                    <span>Sentence Transformers</span>
+                    <span>ChromaDB</span>
+                </div>
+            </div>
+
+            <div class="hero-panel">
+                <div class="terminal-header">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <p>citemind/rag_pipeline.py</p>
+                </div>
+
+                <div class="code-card">
+                    <p><span class="code-purple">pipeline</span> = CiteMind()</p>
+                    <p>paper = <span class="code-blue">upload_pdf</span>("alexnet.pdf")</p>
+                    <p>chunks = <span class="code-blue">chunk_text</span>(paper)</p>
+                    <p>vectors = <span class="code-blue">embed_chunks</span>(chunks)</p>
+                    <p>context = <span class="code-blue">retrieve</span>(question)</p>
+                    <p>answer = <span class="code-green">generate_cited_answer</span>(context)</p>
+                </div>
+
+                <div class="mini-output">
+                    <p class="output-title">Output</p>
+                    <p>Answer generated with citations</p>
+                    <p>[Source 1: alexnet.pdf, chunk 44]</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="stats">
+            <div class="stat-card">
+                <p>Total Stored Chunks</p>
+                <h3>{{ total_chunks }}</h3>
+                <span>Persisted in ChromaDB</span>
+            </div>
+
+            <div class="stat-card">
+                <p>Embedding Model</p>
+                <h3>384D</h3>
+                <span>all-MiniLM-L6-v2</span>
+            </div>
+
+            <div class="stat-card">
+                <p>Pipeline Status</p>
+                <h3>Active</h3>
+                <span>Upload → Ask ready</span>
+            </div>
+
+            <div class="stat-card">
+                <p>Backend</p>
+                <h3>FastAPI</h3>
+                <span>Swagger available</span>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="section-heading">
+                <p>System Architecture</p>
+                <h2>End-to-end RAG workflow</h2>
+            </div>
+
+            <div class="pipeline">
+                <div class="pipeline-step">
+                    <div class="step-number">01</div>
+                    <h3>Upload PDF</h3>
+                    <p>Accepts research papers through the backend API.</p>
+                </div>
+
+                <div class="pipeline-step">
+                    <div class="step-number">02</div>
+                    <h3>Extract Text</h3>
+                    <p>Uses PyMuPDF to extract page-level text from PDFs.</p>
+                </div>
+
+                <div class="pipeline-step">
+                    <div class="step-number">03</div>
+                    <h3>Chunk Text</h3>
+                    <p>Splits documents into overlapping chunks for retrieval.</p>
+                </div>
+
+                <div class="pipeline-step">
+                    <div class="step-number">04</div>
+                    <h3>Embed Chunks</h3>
+                    <p>Converts text chunks into dense vector embeddings.</p>
+                </div>
+
+                <div class="pipeline-step">
+                    <div class="step-number">05</div>
+                    <h3>Store Vectors</h3>
+                    <p>Persists embeddings and metadata in ChromaDB.</p>
+                </div>
+
+                <div class="pipeline-step">
+                    <div class="step-number">06</div>
+                    <h3>Retrieve Context</h3>
+                    <p>Finds the most relevant chunks for a user question.</p>
+                </div>
+
+                <div class="pipeline-step">
+                    <div class="step-number">07</div>
+                    <h3>Generate Answer</h3>
+                    <p>Builds a grounded response from retrieved chunks.</p>
+                </div>
+
+                <div class="pipeline-step">
+                    <div class="step-number">08</div>
+                    <h3>Return Citations</h3>
+                    <p>Shows source labels with filename and chunk ID.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section endpoints-section">
+            <div class="section-heading">
+                <p>API Layer</p>
+                <h2>Available backend endpoints</h2>
+            </div>
+
+            <div class="endpoint-grid">
+                <div class="endpoint-card">
+                    <div class="endpoint-top">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/health</span>
+                    </div>
+                    <h3>Health Check</h3>
+                    <p>Checks whether the CiteMind backend service is running.</p>
+                </div>
+
+                <div class="endpoint-card featured">
+                    <div class="endpoint-top">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/upload-pdf</span>
+                    </div>
+                    <h3>Upload and Index PDF</h3>
+                    <p>Uploads a paper, extracts text, chunks it, embeds it, and stores it in ChromaDB.</p>
+                </div>
+
+                <div class="endpoint-card">
+                    <div class="endpoint-top">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/search</span>
+                    </div>
+                    <h3>Similarity Search</h3>
+                    <p>Retrieves the most relevant document chunks for a question.</p>
+                </div>
+
+                <div class="endpoint-card featured">
+                    <div class="endpoint-top">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/ask</span>
+                    </div>
+                    <h3>Ask with Citations</h3>
+                    <p>Returns a grounded answer with clean source citations.</p>
+                </div>
+
+                <div class="endpoint-card">
+                    <div class="endpoint-top">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/vector-store/stats</span>
+                    </div>
+                    <h3>Vector Store Stats</h3>
+                    <p>Displays collection name and total stored chunks.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>CiteMind • AI-powered research paper assistant • Built with FastAPI and RAG</p>
+    </footer>
+</body>
+</html>
