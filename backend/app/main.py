@@ -3,6 +3,7 @@ from pathlib import Path
 from fastapi import FastAPI, File, UploadFile, HTTPException
 
 from backend.app.services.pdf_service import extract_text_from_pdf
+from backend.app.services.chunking_service import chunk_text
 
 app = FastAPI(
     title="CiteMind API",
@@ -46,13 +47,17 @@ async def upload_pdf(file: UploadFile = File(...)):
         f.write(content)
 
     extracted_data = extract_text_from_pdf(str(file_path))
+    chunks = chunk_text(extracted_data["full_text"])
 
     text_preview = extracted_data["full_text"][:1000]
+    chunk_preview = chunks[:3]
 
     return {
-        "message": "PDF uploaded and text extracted successfully",
+        "message": "PDF uploaded, text extracted, and chunked successfully",
         "filename": file.filename,
         "file_path": str(file_path),
         "total_pages": extracted_data["total_pages"],
-        "text_preview": text_preview
+        "total_chunks": len(chunks),
+        "text_preview": text_preview,
+        "chunk_preview": chunk_preview
     }
