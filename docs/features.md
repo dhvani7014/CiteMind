@@ -22,13 +22,17 @@
 - Query embedding generation
 - Similarity search over stored chunks
 - Search endpoint for retrieving relevant chunks
+- Grounded answer generation
+- Ask endpoint for document-based Q&A
+- Source metadata in answers
 
 ## In Progress
 
-- RAG answer generation
+- Citation formatting
 
 ## Planned
 
+- LLM-based answer generation
 - Source citations
 - Frontend chat UI
 - Evaluation system

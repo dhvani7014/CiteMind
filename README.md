@@ -180,3 +180,16 @@ When a user asks a question, CiteMind:
 4. Includes filename, chunk ID, character positions, and similarity distance.
 
 This is the retrieval part of Retrieval-Augmented Generation.
+
+## Grounded Answer Generation
+
+CiteMind now supports a basic RAG-style answer endpoint through `/ask`.
+
+When a user asks a question, CiteMind:
+
+1. Converts the question into an embedding.
+2. Searches the vector database for relevant chunks.
+3. Uses the retrieved chunks to generate a grounded answer.
+4. Returns the answer with source metadata.
+
+The current answer generator is intentionally conservative. It only uses retrieved document text and does not use an external LLM yet. This helps reduce hallucination and keeps the first RAG pipeline simple and transparent.
