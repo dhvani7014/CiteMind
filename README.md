@@ -115,3 +115,27 @@ To test the upload endpoint:
 6. Click `Execute`.
 
 Uploaded files are stored locally in `backend/uploads/`, which is ignored by GitHub.
+
+## Text Chunking for RAG
+
+CiteMind now supports splitting extracted PDF text into smaller overlapping chunks.
+
+Chunking is an important step in Retrieval-Augmented Generation because large documents cannot be passed directly into an AI model all at once. Instead, the document is broken into smaller sections that can later be embedded, stored in a vector database, and retrieved based on a user's question.
+
+The current chunking system uses:
+
+- Chunk size: 1000 characters
+- Overlap: 200 characters
+
+The overlap helps preserve context between nearby chunks.## Text Chunking for RAG
+
+CiteMind now supports splitting extracted PDF text into smaller overlapping chunks.
+
+Chunking is an important step in Retrieval-Augmented Generation because large documents cannot be passed directly into an AI model all at once. Instead, the document is broken into smaller sections that can later be embedded, stored in a vector database, and retrieved based on a user's question.
+
+The current chunking system uses:
+
+- Chunk size: 1000 characters
+- Overlap: 200 characters
+
+The overlap helps preserve context between nearby chunks.

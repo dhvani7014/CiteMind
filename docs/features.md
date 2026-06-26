@@ -4,18 +4,23 @@
 
 - Project structure
 - Basic README
-- FastAPI starter file
+- FastAPI backend setup
+- Health check endpoint
+- PDF upload endpoint
+- PDF validation
+- Local PDF storage
+- PDF text extraction using PyMuPDF
+- Text preview response
+- Text chunking service
+- Overlapping chunk generation
+- Chunk preview response
 
 ## In Progress
 
-- Backend setup
+- Embeddings for document chunks
 
 ## Planned
 
-- PDF upload
-- Text extraction
-- Chunking
-- Embeddings
 - Vector database
 - RAG question answering
 - Source citations
