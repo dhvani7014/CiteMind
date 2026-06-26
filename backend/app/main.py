@@ -1,12 +1,17 @@
 from pathlib import Path
 
 from fastapi import FastAPI, File, UploadFile, HTTPException
+from pydantic import BaseModel
 
 from backend.app.services.pdf_service import extract_text_from_pdf
 from backend.app.services.chunking_service import chunk_text
-from backend.app.services.embedding_service import generate_embeddings
+from backend.app.services.embedding_service import (
+    generate_embeddings,
+    generate_query_embedding,
+)
 from backend.app.services.vector_store_service import (
     store_chunks_in_vector_db,
+    search_similar_chunks,
     get_collection_count,
 )
 
@@ -18,6 +23,11 @@ app = FastAPI(
 
 UPLOAD_DIR = Path("backend/uploads")
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+
+class SearchRequest(BaseModel):
+    question: str
+    top_k: int = 3
 
 
 @app.get("/")
@@ -79,6 +89,28 @@ async def upload_pdf(file: UploadFile = File(...)):
         "total_chunks_in_vector_db": get_collection_count(),
         "text_preview": text_preview,
         "chunk_preview": chunk_preview
+    }
+
+
+@app.post("/search")
+def search_documents(request: SearchRequest):
+    if get_collection_count() == 0:
+        raise HTTPException(
+            status_code=400,
+            detail="No document chunks found. Please upload a PDF first."
+        )
+
+    query_embedding = generate_query_embedding(request.question)
+
+    retrieved_chunks = search_similar_chunks(
+        query_embedding=query_embedding,
+        top_k=request.top_k
+    )
+
+    return {
+        "question": request.question,
+        "top_k": request.top_k,
+        "retrieved_chunks": retrieved_chunks
     }
 
 
