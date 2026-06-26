@@ -31,3 +31,13 @@ def generate_embeddings(chunks: list[dict]) -> list[dict]:
         )
 
     return embedded_chunks
+
+
+def generate_query_embedding(question: str) -> list[float]:
+    """
+    Generate an embedding for a user question.
+    """
+
+    embedding = model.encode(question)
+
+    return embedding.tolist()
