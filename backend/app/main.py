@@ -5,6 +5,10 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from backend.app.services.pdf_service import extract_text_from_pdf
 from backend.app.services.chunking_service import chunk_text
 from backend.app.services.embedding_service import generate_embeddings
+from backend.app.services.vector_store_service import (
+    store_chunks_in_vector_db,
+    get_collection_count,
+)
 
 app = FastAPI(
     title="CiteMind API",
@@ -51,6 +55,11 @@ async def upload_pdf(file: UploadFile = File(...)):
     chunks = chunk_text(extracted_data["full_text"])
     embedded_chunks = generate_embeddings(chunks)
 
+    vector_store_result = store_chunks_in_vector_db(
+        embedded_chunks=embedded_chunks,
+        filename=file.filename
+    )
+
     text_preview = extracted_data["full_text"][:1000]
     chunk_preview = chunks[:3]
 
@@ -59,13 +68,23 @@ async def upload_pdf(file: UploadFile = File(...)):
         embedding_dimension = len(embedded_chunks[0]["embedding"])
 
     return {
-        "message": "PDF uploaded, text extracted, chunked, and embedded successfully",
+        "message": "PDF uploaded, text extracted, chunked, embedded, and stored successfully",
         "filename": file.filename,
         "file_path": str(file_path),
         "total_pages": extracted_data["total_pages"],
         "total_chunks": len(chunks),
         "embedding_model": "all-MiniLM-L6-v2",
         "embedding_dimension": embedding_dimension,
+        "vector_store": vector_store_result,
+        "total_chunks_in_vector_db": get_collection_count(),
         "text_preview": text_preview,
         "chunk_preview": chunk_preview
+    }
+
+
+@app.get("/vector-store/stats")
+def vector_store_stats():
+    return {
+        "collection_name": "citemind_papers",
+        "total_chunks": get_collection_count()
     }
