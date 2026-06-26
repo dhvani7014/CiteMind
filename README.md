@@ -139,3 +139,16 @@ The current chunking system uses:
 - Overlap: 200 characters
 
 The overlap helps preserve context between nearby chunks.
+
+## Embedding Generation
+
+CiteMind now supports generating embeddings for text chunks using the `all-MiniLM-L6-v2` sentence-transformers model.
+
+Embeddings convert text into numerical vectors. These vectors will later be stored in a vector database and used to retrieve the most relevant document chunks when a user asks a question.
+
+Current embedding setup:
+
+- Model: `all-MiniLM-L6-v2`
+- Embedding dimension: 384
+- Input: chunked PDF text
+- Output: vector representation for each chunk

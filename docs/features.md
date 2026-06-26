@@ -14,10 +14,12 @@
 - Text chunking service
 - Overlapping chunk generation
 - Chunk preview response
+- Embedding generation using sentence-transformers
+- Embedding model metadata response
 
 ## In Progress
 
-- Embeddings for document chunks
+- Vector database storage
 
 ## Planned
 
