@@ -25,15 +25,14 @@
 - Grounded answer generation
 - Ask endpoint for document-based Q&A
 - Source metadata in answers
+- Clean citation formatting
 
 ## In Progress
 
-- Citation formatting
+- LLM-based answer generation
 
 ## Planned
 
-- LLM-based answer generation
-- Source citations
 - Frontend chat UI
 - Evaluation system
 - Docker deployment

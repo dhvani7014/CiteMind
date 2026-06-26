@@ -193,3 +193,19 @@ When a user asks a question, CiteMind:
 4. Returns the answer with source metadata.
 
 The current answer generator is intentionally conservative. It only uses retrieved document text and does not use an external LLM yet. This helps reduce hallucination and keeps the first RAG pipeline simple and transparent.
+
+## Source Citation Formatting
+
+CiteMind now supports clean source citation formatting for retrieved document chunks.
+
+When a user asks a question through `/ask`, the backend returns:
+
+- A grounded answer
+- A list of citation labels
+- Source metadata for each retrieved chunk
+
+Example citation format:
+
+`[Source 1: paper.pdf, chunk 4]`
+
+This makes the output more transparent because users can see which document chunks were used to generate the answer.
