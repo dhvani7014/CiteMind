@@ -99,4 +99,19 @@ http://127.0.0.1:8000/docs
 |---|---|---|
 | `/` | GET | Returns a welcome message |
 | `/health` | GET | Checks if the backend is running |
+| `/upload-pdf` | POST | Uploads a research paper PDF |
 
+## PDF Upload Feature
+
+CiteMind now supports uploading PDF files through the FastAPI backend.
+
+To test the upload endpoint:
+
+1. Run the backend server.
+2. Open `http://127.0.0.1:8000/docs`.
+3. Expand the `/upload-pdf` endpoint.
+4. Click `Try it out`.
+5. Upload a PDF file.
+6. Click `Execute`.
+
+Uploaded files are stored locally in `backend/uploads/`, which is ignored by GitHub.
