@@ -53,6 +53,8 @@ ACTIVE_DOCUMENT = {
     "filename": None
 }
 
+CHAT_HISTORY = []
+
 
 class SearchRequest(BaseModel):
     question: str
@@ -62,6 +64,98 @@ class SearchRequest(BaseModel):
 class AskRequest(BaseModel):
     question: str
     top_k: int = 3
+
+
+def is_follow_up_question(question: str) -> bool:
+    question_lower = question.lower().strip()
+
+    follow_up_keywords = [
+        "expand",
+        "more",
+        "explain more",
+        "explain it",
+        "continue",
+        "elaborate",
+        "go deeper",
+        "in detail",
+        "simple terms",
+        "simpler",
+        "give examples",
+        "example",
+        "summarize that",
+        "summarise that",
+        "what about",
+        "why",
+        "how",
+        "this",
+        "that",
+        "it",
+        "above",
+        "previous",
+        "same",
+        "can you explain",
+        "tell me more",
+    ]
+
+    short_followups = [
+        "why",
+        "how",
+        "explain",
+        "explain more",
+        "tell me more",
+        "more",
+        "continue",
+        "expand",
+        "elaborate",
+        "simpler",
+        "examples",
+    ]
+
+    if question_lower in short_followups:
+        return True
+
+    return any(keyword in question_lower for keyword in follow_up_keywords)
+
+
+def build_conversation_aware_question(current_question: str) -> str:
+    if not CHAT_HISTORY:
+        return current_question
+
+    if not is_follow_up_question(current_question):
+        return current_question
+
+    recent_messages = CHAT_HISTORY[-4:]
+
+    history_text = "\n\n".join(
+        [
+            f"User: {message['question']}\nAssistant: {message['answer']}"
+            for message in recent_messages
+        ]
+    )
+
+    return (
+        "The user is asking a follow-up question about the previous conversation.\n\n"
+        f"Previous conversation:\n{history_text}\n\n"
+        f"Current follow-up question: {current_question}\n\n"
+        "Answer the current follow-up using the previous conversation and the uploaded research paper. "
+        "Do not switch topics unless the user clearly asks for a new topic."
+    )
+
+
+def build_retrieval_query(current_question: str) -> str:
+    if not CHAT_HISTORY:
+        return current_question
+
+    if not is_follow_up_question(current_question):
+        return current_question
+
+    last_message = CHAT_HISTORY[-1]
+
+    return (
+        f"{last_message['question']} "
+        f"{last_message['answer']} "
+        f"{current_question}"
+    )
 
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
@@ -160,6 +254,7 @@ def health_check():
         "status": "healthy",
         "service": "CiteMind API",
         "active_document": ACTIVE_DOCUMENT["filename"],
+        "chat_history_count": len(CHAT_HISTORY),
     }
 
 
@@ -188,6 +283,7 @@ async def upload_pdf(file: UploadFile = File(...)):
     )
 
     ACTIVE_DOCUMENT["filename"] = file.filename
+    CHAT_HISTORY.clear()
 
     text_preview = extracted_data["full_text"][:1000]
     chunk_preview = chunks[:3]
@@ -256,7 +352,10 @@ def ask_question(request: AskRequest):
             detail="No active document found. Please upload a PDF first.",
         )
 
-    query_embedding = generate_query_embedding(request.question)
+    conversation_aware_question = build_conversation_aware_question(request.question)
+    retrieval_query = build_retrieval_query(request.question)
+
+    query_embedding = generate_query_embedding(retrieval_query)
 
     retrieved_chunks = search_similar_chunks(
         query_embedding=query_embedding,
@@ -264,7 +363,7 @@ def ask_question(request: AskRequest):
         filename=ACTIVE_DOCUMENT["filename"],
     )
 
-    question_lower = request.question.lower()
+    question_lower = conversation_aware_question.lower()
 
     context_boost_keywords = [
         "main idea",
@@ -435,12 +534,12 @@ def ask_question(request: AskRequest):
         retrieved_chunks = unique_chunks[: request.top_k + 3]
 
     llm_result = generate_llm_answer(
-        question=request.question,
+        question=conversation_aware_question,
         retrieved_chunks=retrieved_chunks,
     )
 
     answer_result = generate_grounded_answer(
-        question=request.question,
+        question=conversation_aware_question,
         retrieved_chunks=retrieved_chunks,
     )
 
@@ -461,8 +560,21 @@ def ask_question(request: AskRequest):
         citations=answer_result["citations"],
     )
 
+    CHAT_HISTORY.append(
+        {
+            "question": request.question,
+            "conversation_aware_question": conversation_aware_question,
+            "answer": final_answer,
+        }
+    )
+
+    if len(CHAT_HISTORY) > 8:
+        CHAT_HISTORY.pop(0)
+
     return {
         "question": request.question,
+        "conversation_aware_question": conversation_aware_question,
+        "retrieval_query": retrieval_query,
         "top_k": request.top_k,
         "active_document": ACTIVE_DOCUMENT["filename"],
         "answer": final_answer,
@@ -473,12 +585,14 @@ def ask_question(request: AskRequest):
         "sources": answer_result["sources"],
         "retrieved_chunks": retrieved_chunks,
         "grounding": grounding_result,
+        "chat_history_count": len(CHAT_HISTORY),
     }
 
 
 @app.delete("/vector-store/clear")
 def clear_stored_chunks():
     ACTIVE_DOCUMENT["filename"] = None
+    CHAT_HISTORY.clear()
     return clear_vector_store()
 
 
@@ -488,4 +602,5 @@ def vector_store_stats():
         "collection_name": "citemind_papers",
         "total_chunks": get_collection_count(),
         "active_document": ACTIVE_DOCUMENT["filename"],
+        "chat_history_count": len(CHAT_HISTORY),
     }
