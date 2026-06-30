@@ -1,21 +1,20 @@
 import os
 
 from dotenv import load_dotenv
+from google import genai
+from google.genai import types
 from groq import Groq
 from openai import OpenAI
 
 load_dotenv()
 
 
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
 
 def build_context_from_chunks(retrieved_chunks: list[dict]) -> str:
-    """
-    Build a compact citation-labeled context string from retrieved chunks.
-    """
-
     context_parts = []
 
     for index, chunk in enumerate(retrieved_chunks, start=1):
@@ -35,10 +34,6 @@ def build_context_from_chunks(retrieved_chunks: list[dict]) -> str:
 
 
 def build_prompts(question: str, retrieved_chunks: list[dict]) -> tuple[str, str]:
-    """
-    Build system and user prompts for citation-grounded answering.
-    """
-
     context = build_context_from_chunks(retrieved_chunks)
 
     system_prompt = """
@@ -57,22 +52,35 @@ Your goals:
 
 Citation rules:
 - Use citations like [Source 1], [Source 2], or [Source 3].
-- Add citations whenever you use specific information from the retrieved context.
+- Add citations when you use specific information from the retrieved context.
 - Do not cite a source unless it appears in the retrieved context.
 - Do not create fake citations.
 - Do not cite every sentence unnecessarily, but cite important claims.
 
-Answer style:
-- Give a direct answer first.
-- Then explain in simple language.
-- Use bullets or numbered steps when helpful.
-- Be clear, student-friendly, and concise.
+Natural answer style:
+- Write like a helpful AI research assistant, similar to ChatGPT or Claude.
+- Use natural paragraphs by default.
+- Do not always answer in numbered lists.
+- Use bullet points only when the user asks for a list, summary, steps, pros/cons, quiz, flashcards, or comparison.
+- For follow-up questions like “expand more,” “tell me more,” or “explain it better,” continue the previous answer smoothly instead of restarting with a rigid numbered list.
+- Start with a direct answer, then explain the idea in a clear and readable way.
+- Keep the tone warm, confident, and student-friendly.
 - Avoid unnecessary jargon.
+- Avoid robotic phrases like “the context says” or “according to the retrieved context.”
 - Do not use markdown headings like ###.
 - Do not use horizontal separators like ---.
 
+Depth rules:
+- If the user asks for a short answer, keep it short.
+- If the user asks to expand, explain more deeply with examples or simple analogies when supported by the retrieved context.
+- If the topic is technical, explain it first in plain English and then add the technical detail.
+- If the user asks a follow-up, connect it to the previous topic and avoid switching to a random section.
+
 If the user asks for a summary:
+- Give a polished research-paper summary.
 - Cover the main problem, proposed approach, key methods, results, and conclusion.
+- Use paragraphs by default.
+- Use bullets only if it improves readability.
 - Keep the answer grounded in the retrieved paper context.
 - Explain technical terms simply.
 
@@ -80,11 +88,13 @@ If the user asks for the main idea:
 - Explain the problem the paper addresses.
 - Explain the core solution.
 - Explain why the work matters.
+- Keep it clear and natural.
 
 If the user asks about methodology:
-- Break the method into clear steps.
-- Explain inputs, process, model/system/algorithm, and outputs.
+- Explain the method in a clear flow.
+- Mention inputs, process, model/system/algorithm, and outputs when supported.
 - Mention equations, components, or architecture only if present in the retrieved context.
+- Use numbered steps only if the user asks for steps or if the process is complex.
 
 If the user asks about results:
 - Explain what was evaluated.
@@ -181,12 +191,8 @@ Retrieved paper context:
     return system_prompt, user_prompt
 
 
-def generate_openai_answer(question: str, retrieved_chunks: list[dict]) -> dict | None:
-    """
-    Generate an answer using OpenAI if OPENAI_API_KEY exists.
-    """
-
-    api_key = os.getenv("OPENAI_API_KEY")
+def generate_gemini_answer(question: str, retrieved_chunks: list[dict]) -> dict | None:
+    api_key = os.getenv("GEMINI_API_KEY")
 
     if not api_key:
         return None
@@ -194,52 +200,42 @@ def generate_openai_answer(question: str, retrieved_chunks: list[dict]) -> dict 
     if not retrieved_chunks:
         return {
             "answer": "I could not find enough relevant information in the retrieved paper sections to answer that confidently.",
-            "llm_provider": "openai",
-            "llm_model": OPENAI_MODEL,
+            "llm_provider": "gemini",
+            "llm_model": GEMINI_MODEL,
         }
 
     try:
-        client = OpenAI(api_key=api_key, timeout=30.0)
+        client = genai.Client(api_key=api_key)
 
         system_prompt, user_prompt = build_prompts(
             question=question,
             retrieved_chunks=retrieved_chunks,
         )
 
-        response = client.chat.completions.create(
-            model=OPENAI_MODEL,
-            messages=[
-                {
-                    "role": "system",
-                    "content": system_prompt,
-                },
-                {
-                    "role": "user",
-                    "content": user_prompt,
-                },
-            ],
-            temperature=0.2,
-            max_tokens=900,
+        response = client.models.generate_content(
+            model=GEMINI_MODEL,
+            contents=user_prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=system_prompt,
+                temperature=0.35,
+                max_output_tokens=1100,
+            ),
         )
 
-        answer = response.choices[0].message.content
+        answer = response.text
 
         return {
             "answer": answer,
-            "llm_provider": "openai",
-            "llm_model": OPENAI_MODEL,
+            "llm_provider": "gemini",
+            "llm_model": GEMINI_MODEL,
         }
 
     except Exception as error:
-        print(f"OpenAI answer generation failed: {error}")
+        print(f"Gemini answer generation failed: {error}")
         return None
 
 
 def generate_groq_answer(question: str, retrieved_chunks: list[dict]) -> dict | None:
-    """
-    Generate an answer using Groq if GROQ_API_KEY exists.
-    """
-
     api_key = os.getenv("GROQ_API_KEY")
 
     if not api_key:
@@ -272,8 +268,8 @@ def generate_groq_answer(question: str, retrieved_chunks: list[dict]) -> dict | 
                     "content": user_prompt,
                 },
             ],
-            temperature=0.2,
-            max_tokens=900,
+            temperature=0.35,
+            max_tokens=1100,
         )
 
         answer = response.choices[0].message.content
@@ -289,23 +285,64 @@ def generate_groq_answer(question: str, retrieved_chunks: list[dict]) -> dict | 
         return None
 
 
+def generate_openai_answer(question: str, retrieved_chunks: list[dict]) -> dict | None:
+    api_key = os.getenv("OPENAI_API_KEY")
+
+    if not api_key:
+        return None
+
+    if not retrieved_chunks:
+        return {
+            "answer": "I could not find enough relevant information in the retrieved paper sections to answer that confidently.",
+            "llm_provider": "openai",
+            "llm_model": OPENAI_MODEL,
+        }
+
+    try:
+        client = OpenAI(api_key=api_key, timeout=30.0)
+
+        system_prompt, user_prompt = build_prompts(
+            question=question,
+            retrieved_chunks=retrieved_chunks,
+        )
+
+        response = client.chat.completions.create(
+            model=OPENAI_MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": system_prompt,
+                },
+                {
+                    "role": "user",
+                    "content": user_prompt,
+                },
+            ],
+            temperature=0.35,
+            max_tokens=1100,
+        )
+
+        answer = response.choices[0].message.content
+
+        return {
+            "answer": answer,
+            "llm_provider": "openai",
+            "llm_model": OPENAI_MODEL,
+        }
+
+    except Exception as error:
+        print(f"OpenAI answer generation failed: {error}")
+        return None
+
+
 def generate_llm_answer(question: str, retrieved_chunks: list[dict]) -> dict | None:
-    """
-    Generate an LLM answer using available providers.
-
-    Priority:
-    1. OpenAI
-    2. Groq
-    3. None, so the app can use local fallback
-    """
-
-    openai_result = generate_openai_answer(
+    gemini_result = generate_gemini_answer(
         question=question,
         retrieved_chunks=retrieved_chunks,
     )
 
-    if openai_result:
-        return openai_result
+    if gemini_result:
+        return gemini_result
 
     groq_result = generate_groq_answer(
         question=question,
@@ -314,5 +351,13 @@ def generate_llm_answer(question: str, retrieved_chunks: list[dict]) -> dict | N
 
     if groq_result:
         return groq_result
+
+    openai_result = generate_openai_answer(
+        question=question,
+        retrieved_chunks=retrieved_chunks,
+    )
+
+    if openai_result:
+        return openai_result
 
     return None
